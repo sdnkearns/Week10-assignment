@@ -1,0 +1,84 @@
+
+Claude finished the response
+
+package main import ( "database/sql" "fmt" "log" "os" "strings" "text/tabwriter" _ "github.com/marcboeker/go-duckdb" ) const defaultDBPath = "./imdb.duckdb" type Query struct { Title string Description string SQL string Columns []string } var q
+
+pasted
+
+I have a go program that executes queries from a duckDB database of imdb information. This is the schema of the database as it was defined in python
+
+TABLES: dict[str, dict] = {
+    "movies": {
+        "file": "aan520_w5a_movies2000After.csv",
+        "schema": {
+            "movie_id": pl.Int64,
+            "name":     pl.Utf8,
+            "year":     pl.Int32,
+            "rank":     pl.Float32,
+        },
+    },
+    "actors": {
+        "file": "aan520_w5a_actors2000After.csv",
+        "schema": {
+            "actor_id":   pl.Int64,
+            "first_name": pl.Utf8,
+            "last_name":  pl.Utf8,
+            "gender":     pl.Utf8,
+        },
+    },
+    "genres": {
+        "file": "aan520_w5a_genres2000After.csv",
+        "schema": {
+            "movie_id": pl.Int64,
+            "genre":    pl.Utf8,
+        },
+    },
+    "roles": {
+        "file": "aan520_w5a_roles2000After.csv",
+        "schema": {
+            "actor_id": pl.Int64,
+            "movie_id": pl.Int64,
+            "role":     pl.Utf8,
+        },
+    },
+}
+I need unit tests for my go code.
+
+Show more
+8:17 PM
+
+Check available skills
+Check available skills
+The tests need to use an in-memory DuckDB database to avoid needing the real .duckdb file. Here's a comprehensive test file:
+
+
+Created a file, read a file
+Created a file, read a file
+Here's what the test file covers:
+
+Setup — openTestDB creates an in-memory DuckDB (empty string path) and seeds it with 8 movies, 5 actors, 8 genre rows, and 12 role rows that mirror the real schema exactly.
+
+Test categories:
+
+Category	Tests
+Query struct	Fields populate correctly, queries slice is non-empty, every entry has a title/SQL/columns
+DB connectivity	Ping succeeds, invalid path returns an error
+Schema / seed	All four tables exist, row counts match seed data
+runQuery	Happy path, invalid SQL returns error, column name override, column count mismatch (graceful), NULL values, empty result set
+Production queries	All four run without error against the test DB
+Query 1 SQL	Drama ranks above Action, correct column count
+Query 2 SQL	Alice Smith (4 movies) is the top actor, all gender values are M/F
+Query 3 SQL	Results have 3 columns, rows are year-descending
+Query 4 SQL	4 columns returned, male + female ≤ total holds for every genre
+DB_PATH env	Default constant is non-empty, env override is respected
+To run:
+
+bash
+go test ./...               # all tests
+go test -v ./...            # verbose
+go test -run TestRunQuery   # specific group
+The tests are self-contained — no .duckdb file needed, no external fixtures.
+
+
+Main test
+Code · GO 
